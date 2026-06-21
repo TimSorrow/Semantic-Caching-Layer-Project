@@ -1,62 +1,64 @@
-# Semantic Caching Layer (Локальный Семантический Кэш)
+# Semantic Caching Layer (Local & Private RAG Cache)
 
-Проект представляет собой MVP слоя семантического кэширования (Semantic Caching Layer) для систем типа **NotebookLM** или любых RAG-пайплайнов. Стек полностью автономен, бесплатен, работает локально на вашем компьютере и не требует внешних API-ключей.
-
----
-
-## 🚀 Архитектурные особенности
-
-1. **Семантический поиск (Vector Search):** В отличие от классического кэширования по ключу-значению, проект сопоставляет векторные представления (embeddings) вопросов. Если новый вопрос похож по смыслу на старый, ответ возвращается мгновенно из кэша.
-2. **Локальный стек моделей (Ollama):**
-   * **Gemma 4** (`gemma4:latest`) — в качестве локальной LLM-модели для ответов на вопросы при промахе кэша (Cache Miss).
-   * **Nomic Embed Text** (`nomic-embed-text`) — для генерации 768-мерных векторов-эмбеддингов текстовых запросов.
-3. **Контекстно-зависимая пре-фильтрация (Context-Aware Pre-Filtering):**
-   * Кэш разделен по хэшу исходных документов (`context_hash`). Это предотвращает отдачу устаревших ответов, если пользователь изменил состав документов в своем блокноте.
-   * Фильтрация происходит на стороне векторной БД Redis с помощью **гибридного поиска** (Pre-filtering), что исключает ложные промахи кэша при наличии аналогичных вопросов в других контекстах.
+This project is a fully local, free, and private MVP for a **Semantic Caching Layer** designed for systems like **NotebookLM** or any custom Retrieval-Augmented Generation (RAG) pipelines. The entire stack runs on your local machine and requires zero cloud API keys.
 
 ---
 
-## 🛠 Технологический стек
+## 🚀 Architectural Features
 
-* **FastAPI** — асинхронный веб-интерфейс для API.
-* **Redis (Redis Stack)** — база данных для хранения хэшей и векторного поиска (HNSW).
-* **Ollama API** — локальный инференс LLM и эмбеддингов.
-* **HTTPX** — асинхронный клиент для взаимодействия с Ollama.
-* **Pytest** — автоматические интеграционные тесты с моками.
+1. **Semantic Similarity Search:** Unlike traditional key-value caches that require exact string matches, this project evaluates the vector embeddings of queries. Rephrased queries with identical semantic intent are served instantly from the cache.
+2. **Local Model Stack (Ollama):**
+   * **Gemma 4** (`gemma4:latest`) — Used as the local fallback LLM to generate responses on cache misses.
+   * **Nomic Embed Text** (`nomic-embed-text`) — Generates 768-dimensional float vectors for input queries.
+3. **Context-Aware Pre-Filtering (Redis-Native Hybrid Search):**
+   * Cache entries are isolated by a document context state hash (`context_hash`). This prevents outdated responses when the source documents change.
+   * Filtering is processed natively inside the Redis vector search engine using **hybrid pre-filtering**:
+     `@context_hash:{context_hash} => [KNN 1 @embedding $vector AS similarity_score]`
+     This guarantees that Redis searches for similar queries *only* within the correct document context, preventing false cache misses from identical queries in other contexts.
 
 ---
 
-## 📦 Быстрый запуск и настройка
+## 🛠 Technology Stack
 
-### 1. Настройка моделей Ollama
-Убедитесь, что у вас установлена [Ollama](https://ollama.com). Загрузите необходимые модели в терминале:
+* **FastAPI** — High-performance asynchronous API framework.
+* **Redis (Redis Stack)** — Database for vector storage and HNSW index similarity search.
+* **Ollama API** — Local inference manager for LLMs and embedding models.
+* **HTTPX** — Asynchronous HTTP client to communicate with Ollama.
+* **Pytest** — Automated testing suite with mock integrations.
+
+---
+
+## 📦 Quick Start & Setup
+
+### 1. Configure Ollama Models
+Ensure you have [Ollama](https://ollama.com) installed and running. Pull the required models:
 ```bash
 ollama pull gemma4
 ollama pull nomic-embed-text
 ```
 
-### 2. Запуск Redis Stack
-Для векторного поиска требуется Redis с модулем RediSearch (входит в Redis Stack). Запустите его через Docker:
+### 2. Start Redis Stack
+Vector search requires Redis with the RediSearch module (included in Redis Stack). Run it via Docker:
 ```bash
 docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
 ```
-*Панель управления Redis Insight будет доступна по адресу http://localhost:8001.*
+*The Redis Insight administration panel will be accessible at http://localhost:8001.*
 
-### 3. Установка Python-зависимостей
-Создайте виртуальное окружение и установите библиотеки из корня проекта:
+### 3. Install Python Dependencies
+Create a virtual environment and install the required packages:
 ```bash
-# Создание venv
+# Create venv
 python -m venv venv
 
-# Активация venv (Windows)
+# Activate venv (Windows)
 .\venv\Scripts\activate
 
-# Установка зависимостей
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Настройка переменных окружения
-Создайте файл `.env` в корне проекта (или скопируйте из `.env.example`):
+### 4. Setup Environment Variables
+Create a `.env` file in the root of the project (or copy `.env.example`):
 ```env
 OLLAMA_URL=http://localhost:11434
 EMBEDDING_MODEL=nomic-embed-text
@@ -67,55 +69,55 @@ VECTOR_DIMENSION=768
 REDIS_URL=redis://localhost:6379
 ```
 
-### 5. Запуск сервера FastAPI
-Запустите сервер uvicorn с автоматической перезагрузкой при изменении кода:
+### 5. Run the FastAPI Server
+Start the development server with auto-reload:
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
 ---
 
-## 🧪 Интерактивное тестирование (Swagger UI)
+## 🧪 Interactive Testing (Swagger UI)
 
-После запуска перейдите по адресу: **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**.
+Open your browser and navigate to: **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**.
 
-### Сценарий проверки семантического кэша:
+### Semantic Caching Test Scenario:
 
-1. **Запрос 1 (Cache Miss):**
-   Отправьте POST-запрос на `/api/v1/query` с телом:
+1. **Request 1 (Cache MISS):**
+   Send a `POST` request to `/api/v1/query` with the following body:
    ```json
    {
      "query": "What is semantic caching?",
      "context_hash": "my_notes_v1"
    }
    ```
-   *Время ответа составит ~30-60 сек (Ollama генерирует ответ с Gemma 4). Статус в ответе: `"status": "MISS"`.*
+   *Response will take ~30-60s as Ollama generates the text using Gemma 4. The response status will be `"status": "MISS"`.*
 
-2. **Запрос 2 (Cache HIT — Похожий вопрос):**
-   Отправьте измененный вопрос в том же контексте:
+2. **Request 2 (Cache HIT — Semantically Similar Query):**
+   Send a rephrased query within the same context:
    ```json
    {
      "query": "Can you explain semantic caching?",
      "context_hash": "my_notes_v1"
    }
    ```
-   *Время ответа составит ~20-50 миллисекунд. Статус в ответе: `"status": "HIT"`, а также будет возвращен коэффициент близости (например, `"similarity": 0.97`).*
+   *Response will take ~20-50 milliseconds. The response status will be `"status": "HIT"` along with the similarity score (e.g., `"similarity": 0.97`).*
 
-3. **Запрос 3 (Смена контекста — Cache Miss):**
-   Задайте тот же вопрос, но измените версию контекста:
+3. **Request 3 (Context Update — Cache MISS):**
+   Send the same query but with an updated context version:
    ```json
    {
      "query": "Can you explain semantic caching?",
      "context_hash": "my_notes_v2"
    }
    ```
-   *Система определит, что контекст изменился, вернет `"status": "MISS"` и сгенерирует новый ответ.*
+   *The system detects that the context hash has updated, triggers a `"status": "MISS"`, and generates a fresh response.*
 
 ---
 
-## 🧪 Запуск автоматических тестов
+## 🧪 Running Automated Tests
 
-Для запуска тестов с изоляцией от внешних сервисов (используются моки):
+To run the unit and integration tests (isolated with mocks):
 ```bash
 python -m pytest
 ```
