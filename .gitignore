@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Testing & Logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+temp_res.json
+temp_query_res.json
+temp_diag_out.txt
+temp_sim_out.txt
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
