@@ -10,6 +10,20 @@ let metrics = {
 // We assume we save average 3500ms for cache hits compared to calling LLM
 const BASELINE_LLM_LATENCY = 3500;
 
+// SVG Pipeline Connections metadata
+const activeConnectors = new Set();
+const connections = [
+    { from: "node-input", to: "node-embed", id: "connector-1" },
+    { from: "node-embed", to: "node-cache", id: "connector-2" },
+    { from: "node-cache", to: "node-hit", id: "connector-hit-1" },
+    { from: "node-cache", to: "node-miss", id: "connector-miss-1" },
+    { from: "node-miss", to: "node-llm", id: "connector-miss-2" },
+    { from: "node-llm", to: "node-store", id: "connector-miss-3" },
+    { from: "node-hit", to: "node-output", id: "connector-hit-2" },
+    { from: "node-store", to: "node-output", id: "connector-miss-4" }
+];
+
+
 document.addEventListener("DOMContentLoaded", () => {
     // DOM Elements
     const queryForm = document.getElementById("query-form");
@@ -262,21 +276,65 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function animateConnector(id, active) {
-        const conn = document.getElementById(id);
-        if (conn) {
-            if (active) conn.classList.add("active");
-            else conn.classList.remove("active");
+        if (active) {
+            activeConnectors.add(id);
+        } else {
+            activeConnectors.delete(id);
         }
+        drawPipeline();
     }
 
     function resetPipelineUI() {
         const nodes = ["node-embed", "node-cache", "node-hit", "node-miss", "node-llm", "node-store", "node-output"];
-        const connectors = ["connector-1", "connector-2", "connector-hit-1", "connector-hit-2", "connector-miss-1", "connector-miss-2", "connector-miss-3", "connector-miss-4"];
-        
         nodes.forEach(id => animateNode(id, false));
-        connectors.forEach(id => animateConnector(id, false));
+        activeConnectors.clear();
+        drawPipeline();
         document.getElementById("hit-similarity-text").textContent = "-";
     }
+
+    function drawPipeline() {
+        const svg = document.getElementById("pipeline-svg");
+        if (!svg) return;
+        
+        // Clear previous lines
+        svg.innerHTML = "";
+        
+        const svgRect = svg.getBoundingClientRect();
+        
+        connections.forEach(conn => {
+            const fromEl = document.querySelector(`#${conn.from} .node-icon`);
+            const toEl = document.querySelector(`#${conn.to} .node-icon`);
+            if (!fromEl || !toEl) return;
+            
+            const fromRect = fromEl.getBoundingClientRect();
+            const toRect = toEl.getBoundingClientRect();
+            
+            // Draw exact line between centers of the circular icons
+            const x1 = fromRect.left - svgRect.left + fromRect.width / 2;
+            const y1 = fromRect.top - svgRect.top + fromRect.height / 2;
+            const x2 = toRect.left - svgRect.left + toRect.width / 2;
+            const y2 = toRect.top - svgRect.top + toRect.height / 2;
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("id", conn.id);
+            line.setAttribute("class", "pipeline-line");
+            
+            if (activeConnectors.has(conn.id)) {
+                line.classList.add("active");
+            }
+            
+            svg.appendChild(line);
+        });
+    }
+
+    // Call drawing function on initialization and window resizing
+    setTimeout(drawPipeline, 100);
+    window.addEventListener("resize", drawPipeline);
+
 
     function updateMetricsUI() {
         statRequests.textContent = metrics.totalRequests;

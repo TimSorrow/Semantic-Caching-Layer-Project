@@ -544,29 +544,36 @@ input[type="range"]::-webkit-slider-thumb:hover {
     box-shadow: 0 0 15px rgba(248, 113, 113, 0.35);
 }
 
-/* Pipeline Connectors */
-.pipeline-connector {
-    flex-grow: 1;
-    height: 1px;
-    background: var(--glass-border);
-    position: relative;
-    z-index: 1;
+/* SVG Pipeline Connectors */
+.pipeline-line {
+    stroke: var(--glass-border);
+    stroke-width: 1.5px;
+    fill: none;
+    transition: stroke 0.3s, stroke-width 0.3s, stroke-dasharray 0.3s, filter 0.3s;
 }
 
-.pipeline-connector.active::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: flowPulse 1.5s infinite linear;
+.pipeline-line.active {
+    stroke: var(--accent-blue);
+    stroke-width: 2.5px;
+    stroke-dasharray: 6;
+    animation: pipelineDash 1.2s linear infinite;
+    filter: drop-shadow(0 0 5px var(--blue-glow));
 }
 
-@keyframes flowPulse {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+#connector-hit-1.active, #connector-hit-2.active {
+    stroke: var(--accent-green);
+    filter: drop-shadow(0 0 6px var(--green-glow));
+}
+
+#connector-miss-1.active, #connector-miss-2.active, #connector-miss-3.active, #connector-miss-4.active {
+    stroke: var(--accent-violet);
+    filter: drop-shadow(0 0 6px var(--violet-glow));
+}
+
+@keyframes pipelineDash {
+    to {
+        stroke-dashoffset: -12;
+    }
 }
 
 /* Split Pathways */
@@ -582,34 +589,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-.diagonal-up {
-    transform: rotate(-18deg);
-    transform-origin: left center;
-    width: 32px;
-}
-
-.diagonal-down {
-    transform: rotate(18deg);
-    transform-origin: left center;
-    width: 32px;
-}
-
-.diagonal-down-out {
-    transform: rotate(18deg);
-    transform-origin: right center;
-    width: 32px;
-}
-
-.diagonal-up-out {
-    transform: rotate(-18deg);
-    transform-origin: right center;
-    width: 32px;
-}
-
-.pipeline-split-container .pipeline-connector.horizontal {
-    width: 20px;
 }
 
 /* Performance Alert Panel */
