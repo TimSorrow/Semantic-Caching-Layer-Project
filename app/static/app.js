@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 animateConnector("connector-miss-2", true);
                 await sleep(400);
                 animateNode("node-llm", true);
-                logToConsole(`⚠️ Cache MISS.\nPrompting local fallback LLM (Gemma 4). This runs local token generation...`);
+                logToConsole(`⚠️ Cache MISS.\nPrompting local fallback LLM (Llama 3.2). This runs local token generation...`);
                 
                 // Keep highlighting LLM while we simulate response wait
                 await sleep(600);
@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 animateConnector("connector-miss-4", true);
                 await sleep(400);
 
-                logToConsole(`🤖 Gemma 4 generated response.\nSaving response vector to Redis HNSW index...\nLatency: ${latency} ms\nLLM Response: "${data.response.substring(0, 150)}..."`);
+                logToConsole(`🤖 Llama 3.2 generated response.\nSaving response vector to Redis HNSW index...\nLatency: ${latency} ms\nLLM Response: "${data.response.substring(0, 150)}..."`);
                 
                 // Show Performance Alert
                 perfStatusBadge.textContent = "MISS";

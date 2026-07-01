@@ -6,21 +6,20 @@
     <title>Semantic Cache Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="glow-bg"></div>
-    <div class="glow-bg-secondary"></div>
+    <div id="canvas-container"></div>
 
     <div class="app-container">
-        <!-- Header -->
+        <!-- Navigation Header -->
         <header class="app-header">
             <div class="logo-area">
-                <div class="logo-icon">⚡</div>
-                <div>
+                <div class="logo-icon">T/S</div>
+                <div class="header-title-wrapper">
                     <h1>Semantic Caching Layer</h1>
-                    <p class="subtitle">Context-Aware Vector Cache Developer Dashboard</p>
+                    <p class="subtitle">02 // Cache Dashboard</p>
                 </div>
             </div>
             <div class="system-status">
@@ -35,21 +34,21 @@
             </div>
         </header>
 
-        <!-- Main Grid -->
+        <!-- Main Dashboard Grid -->
         <main class="dashboard-grid">
             
-            <!-- Left Side: Simulator and Metrics -->
+            <!-- Left Panel (Simulator and Metrics) -->
             <div class="column-left">
                 <!-- Simulator Card -->
                 <section class="card glass-card">
                     <div class="card-header">
-                        <h2>🚀 Query Simulator</h2>
-                        <span class="badge">Playground</span>
+                        <h2>Query Simulator</h2>
+                        <span class="section-label">Playground</span>
                     </div>
                     <form id="query-form" class="simulator-form">
                         <div class="form-group">
                             <label for="query-input">Query String</label>
-                            <textarea id="query-input" placeholder="Type a question (e.g., What is semantic caching?)" required></textarea>
+                            <textarea id="query-input" placeholder="Type a query string..." required></textarea>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -73,7 +72,7 @@
                 <!-- Metrics Card -->
                 <section class="card glass-card">
                     <div class="card-header">
-                        <h2>📊 Real-Time Metrics</h2>
+                        <h2>Real-Time Metrics</h2>
                         <button class="btn btn-icon" id="btn-reset-metrics" title="Reset Session Metrics">🔄</button>
                     </div>
                     <div class="metrics-grid">
@@ -106,13 +105,13 @@
                 </section>
             </div>
 
-            <!-- Right Side: Pipeline Visualizer and Logs -->
+            <!-- Right Panel (Pipeline Flow and Outputs) -->
             <div class="column-right">
                 <!-- Visualizer Card -->
                 <section class="card glass-card">
                     <div class="card-header">
-                        <h2>⚡ Pipeline Flow Visualizer</h2>
-                        <span class="badge" id="flow-status">IDLE</span>
+                        <h2>Pipeline Flow Visualizer</h2>
+                        <span class="section-label" id="flow-status">IDLE</span>
                     </div>
                     <div class="pipeline-visualizer">
                         <div class="pipeline-node active" id="node-input">
@@ -155,7 +154,7 @@
                                 <div class="pipeline-connector horizontal" id="connector-miss-2"></div>
                                 <div class="pipeline-node" id="node-llm">
                                     <div class="node-icon">🤖</div>
-                                    <span>Gemma 4</span>
+                                    <span>Llama 3.2</span>
                                     <small class="node-meta">Thinking...</small>
                                 </div>
                                 <div class="pipeline-connector horizontal" id="connector-miss-3"></div>
@@ -173,7 +172,7 @@
                         </div>
                     </div>
                     
-                    <!-- Latency Alert Panel -->
+                    <!-- Performance Metrics Display -->
                     <div class="performance-panel hidden" id="performance-banner">
                         <div class="perf-metric">
                             <span>Status:</span>
@@ -191,7 +190,7 @@
                         </div>
                     </div>
 
-                    <!-- Output Console -->
+                    <!-- Console Logs Console -->
                     <div class="console-output">
                         <div class="console-header">
                             <span>CONSOLE OUTPUT</span>
@@ -203,11 +202,11 @@
             </div>
         </main>
 
-        <!-- Lower Section: Redis Cache Inspector -->
+        <!-- Live Redis Table Management -->
         <section class="card glass-card bottom-card">
             <div class="card-header">
                 <div class="header-left">
-                    <h2>💾 Live Redis Cache Inspector</h2>
+                    <h2>Live Redis Cache Inspector</h2>
                     <span class="badge font-mono" id="keys-count">0 Keys</span>
                 </div>
                 <div class="header-right">
