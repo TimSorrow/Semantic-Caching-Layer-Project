@@ -316,8 +316,14 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const res = await fetch("/health");
             if (res.ok) {
-                redisStatus.className = "status-dot green";
-                redisStatusText.textContent = "Online";
+                const data = await res.json();
+                if (data.redis === "online") {
+                    redisStatus.className = "status-dot green";
+                    redisStatusText.textContent = "Online";
+                } else {
+                    redisStatus.className = "status-dot red";
+                    redisStatusText.textContent = "Offline";
+                }
             } else {
                 throw new Error();
             }

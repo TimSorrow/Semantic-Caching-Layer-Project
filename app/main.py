@@ -196,9 +196,19 @@ async def delete_cache_key(key_id: str):
 @app.get("/health")
 async def health_endpoint():
     """
-    Verify application health.
+    Verify application health, including checking Redis connection.
     """
-    return {"status": "ok"}
+    client = get_redis_client()
+    try:
+        await client.ping()
+        redis_ok = True
+    except Exception:
+        redis_ok = False
+        
+    return {
+        "status": "ok" if redis_ok else "degraded",
+        "redis": "online" if redis_ok else "offline"
+    }
 
 # Serve Frontend SPA
 @app.get("/", response_class=FileResponse)

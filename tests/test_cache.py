@@ -35,10 +35,15 @@ def mock_invalidate_cache():
     with patch("app.main.invalidate_cache", new_callable=AsyncMock) as mock:
         yield mock
 
-def test_health():
+@patch("app.main.get_redis_client")
+def test_health(mock_get_redis):
+    mock_client = MagicMock()
+    mock_get_redis.return_value = mock_client
+    mock_client.ping = AsyncMock()
+    
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ok", "redis": "online"}
 
 def test_query_cache_hit(mock_get_embedding, mock_search_cache, mock_generate_llm_response):
     # Set up cache hit response
