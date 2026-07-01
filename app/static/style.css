@@ -591,6 +591,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
     justify-content: space-between;
 }
 
+.hit-path {
+    justify-content: center;
+}
+
 /* Performance Alert Panel */
 .performance-panel {
     display: flex;
