@@ -1,7 +1,10 @@
+import os
 import logging
 import httpx
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.core.config import settings
 from app.schemas.cache import (
@@ -15,7 +18,8 @@ from app.services.cache_service import (
     init_cache_index,
     search_cache,
     store_cache,
-    invalidate_cache
+    invalidate_cache,
+    get_redis_client
 )
 
 # Configure logging
@@ -24,6 +28,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure static directory exists
+    os.makedirs("app/static", exist_ok=True)
+    
     # Initialize Redis search index on startup
     logger.info("Initializing application and Redis index...")
     try:
@@ -39,6 +46,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Mount static files (will create dashboard assets here)
+# Make sure we mount it AFTER defining routes or handle fallback correctly.
+# But we can also mount it at /static and serve / directly with FileResponse.
 
 async def generate_llm_response(prompt: str) -> str:
     """
@@ -146,9 +157,53 @@ async def invalidate_endpoint(payload: InvalidateRequest):
     invalidated_count = await invalidate_cache(payload.context_hash)
     return InvalidateResponse(invalidated_count=invalidated_count)
 
+@app.get("/api/v1/cache/keys")
+async def list_cache_keys():
+    """
+    Retrieves metadata of all entries currently stored in Redis.
+    """
+    client = get_redis_client()
+    try:
+        keys = await client.keys("cache:*")
+        details = []
+        for key in keys:
+            mapping = await client.hgetall(key)
+            decoded = {"key": key.decode('utf-8') if isinstance(key, bytes) else key}
+            for k, v in mapping.items():
+                k_str = k.decode('utf-8') if isinstance(k, bytes) else k
+                if k_str != "embedding":
+                    decoded[k_str] = v.decode('utf-8') if isinstance(v, bytes) else v
+            details.append(decoded)
+        return details
+    except Exception as e:
+        logger.error(f"Failed to retrieve cache keys: {e}")
+        return []
+
+@app.delete("/api/v1/cache/keys/{key_id}")
+async def delete_cache_key(key_id: str):
+    """
+    Deletes a specific cache key from Redis.
+    """
+    client = get_redis_client()
+    try:
+        # Key in database format is cache:<uuid>
+        res = await client.delete(key_id)
+        return {"status": "ok" if res else "not_found"}
+    except Exception as e:
+        logger.error(f"Failed to delete cache key: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/health")
 async def health_endpoint():
     """
     Verify application health.
     """
     return {"status": "ok"}
+
+# Serve Frontend SPA
+@app.get("/", response_class=FileResponse)
+async def read_index():
+    return FileResponse("app/static/index.html")
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+

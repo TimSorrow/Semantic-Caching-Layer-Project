@@ -118,3 +118,38 @@ def test_invalidate_cache_endpoint(mock_invalidate_cache):
     data = response.json()
     assert data["invalidated_count"] == 5
     mock_invalidate_cache.assert_called_once_with("test_hash")
+
+@patch("app.main.get_redis_client")
+def test_list_cache_keys(mock_get_redis, mock_search_cache):
+    # Mock Redis client response
+    mock_client = MagicMock()
+    mock_get_redis.return_value = mock_client
+    
+    # Mock keys method returning bytes keys
+    mock_client.keys = AsyncMock(return_value=[b"cache:key_1"])
+    mock_client.hgetall = AsyncMock(return_value={
+        b"query": b"test query",
+        b"response": b"test response",
+        b"context_hash": b"test_hash"
+    })
+    
+    response = client.get("/api/v1/cache/keys")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["key"] == "cache:key_1"
+    assert data[0]["query"] == "test query"
+    assert data[0]["response"] == "test response"
+    assert data[0]["context_hash"] == "test_hash"
+
+@patch("app.main.get_redis_client")
+def test_delete_cache_key(mock_get_redis):
+    mock_client = MagicMock()
+    mock_get_redis.return_value = mock_client
+    mock_client.delete = AsyncMock(return_value=1)
+    
+    response = client.delete("/api/v1/cache/keys/cache:key_1")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    mock_client.delete.assert_called_once_with("cache:key_1")
+

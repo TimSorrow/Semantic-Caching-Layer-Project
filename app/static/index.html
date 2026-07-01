@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Cache Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="glow-bg-secondary"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">⚡</div>
+                <div>
+                    <h1>Semantic Caching Layer</h1>
+                    <p class="subtitle">Context-Aware Vector Cache Developer Dashboard</p>
+                </div>
+            </div>
+            <div class="system-status">
+                <div class="status-indicator">
+                    <span class="status-dot green" id="redis-status"></span>
+                    <span>Redis: <strong id="redis-status-text">Checking...</strong></span>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot green" id="ollama-status"></span>
+                    <span>Ollama: <strong id="ollama-status-text">Checking...</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Side: Simulator and Metrics -->
+            <div class="column-left">
+                <!-- Simulator Card -->
+                <section class="card glass-card">
+                    <div class="card-header">
+                        <h2>🚀 Query Simulator</h2>
+                        <span class="badge">Playground</span>
+                    </div>
+                    <form id="query-form" class="simulator-form">
+                        <div class="form-group">
+                            <label for="query-input">Query String</label>
+                            <textarea id="query-input" placeholder="Type a question (e.g., What is semantic caching?)" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="context-input">Context Hash</label>
+                                <input type="text" id="context-input" value="workspace_a" placeholder="e.g. docs_v1" required />
+                            </div>
+                            <div class="form-group">
+                                <label for="threshold-display">Similarity Threshold: <span id="threshold-val">0.90</span></label>
+                                <div class="slider-container">
+                                    <input type="range" id="threshold-slider" min="0.70" max="0.99" step="0.01" value="0.90">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-submit">
+                            <span>Execute Query</span>
+                            <span class="spinner" id="btn-spinner"></span>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Metrics Card -->
+                <section class="card glass-card">
+                    <div class="card-header">
+                        <h2>📊 Real-Time Metrics</h2>
+                        <button class="btn btn-icon" id="btn-reset-metrics" title="Reset Session Metrics">🔄</button>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <span class="metric-label">Total Requests</span>
+                            <span class="metric-value" id="stat-requests">0</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cache Hit Rate</span>
+                            <span class="metric-value text-glow-blue" id="stat-hit-rate">0%</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cache Hits</span>
+                            <span class="metric-value text-glow-green" id="stat-hits">0</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cache Misses</span>
+                            <span class="metric-value text-glow-purple" id="stat-misses">0</span>
+                        </div>
+                    </div>
+                    <div class="latency-savings-bar">
+                        <div class="latency-saved-label">
+                            <span>Cumulative Latency Saved</span>
+                            <strong id="stat-latency-saved" class="text-glow-blue">0 ms</strong>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="latency-bar-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Side: Pipeline Visualizer and Logs -->
+            <div class="column-right">
+                <!-- Visualizer Card -->
+                <section class="card glass-card">
+                    <div class="card-header">
+                        <h2>⚡ Pipeline Flow Visualizer</h2>
+                        <span class="badge" id="flow-status">IDLE</span>
+                    </div>
+                    <div class="pipeline-visualizer">
+                        <div class="pipeline-node active" id="node-input">
+                            <div class="node-icon">📥</div>
+                            <span>Input</span>
+                        </div>
+                        <div class="pipeline-connector" id="connector-1"></div>
+
+                        <div class="pipeline-node" id="node-embed">
+                            <div class="node-icon">🧠</div>
+                            <span>Embedding</span>
+                            <small class="node-meta">nomic-embed-text</small>
+                        </div>
+                        <div class="pipeline-connector" id="connector-2"></div>
+
+                        <div class="pipeline-node" id="node-cache">
+                            <div class="node-icon">🔍</div>
+                            <span>Redis VSS</span>
+                            <small class="node-meta">HNSW Index</small>
+                        </div>
+                        
+                        <div class="pipeline-split-container">
+                            <!-- HIT path -->
+                            <div class="split-path hit-path">
+                                <div class="pipeline-connector diagonal-up" id="connector-hit-1"></div>
+                                <div class="pipeline-node success-glow" id="node-hit">
+                                    <div class="node-icon">✅</div>
+                                    <span>Cache HIT</span>
+                                    <small class="node-meta" id="hit-similarity-text">-</small>
+                                </div>
+                                <div class="pipeline-connector diagonal-down-out" id="connector-hit-2"></div>
+                            </div>
+                            <!-- MISS path -->
+                            <div class="split-path miss-path">
+                                <div class="pipeline-connector diagonal-down" id="connector-miss-1"></div>
+                                <div class="pipeline-node error-glow" id="node-miss">
+                                    <div class="node-icon">❌</div>
+                                    <span>Cache MISS</span>
+                                </div>
+                                <div class="pipeline-connector horizontal" id="connector-miss-2"></div>
+                                <div class="pipeline-node" id="node-llm">
+                                    <div class="node-icon">🤖</div>
+                                    <span>Gemma 4</span>
+                                    <small class="node-meta">Thinking...</small>
+                                </div>
+                                <div class="pipeline-connector horizontal" id="connector-miss-3"></div>
+                                <div class="pipeline-node" id="node-store">
+                                    <div class="node-icon">💾</div>
+                                    <span>Save Cache</span>
+                                </div>
+                                <div class="pipeline-connector diagonal-up-out" id="connector-miss-4"></div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-node" id="node-output">
+                            <div class="node-icon">📤</div>
+                            <span>Output</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Latency Alert Panel -->
+                    <div class="performance-panel hidden" id="performance-banner">
+                        <div class="perf-metric">
+                            <span>Status:</span>
+                            <strong id="perf-status-badge" class="badge">HIT</strong>
+                        </div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-metric">
+                            <span>Similarity Score:</span>
+                            <strong id="perf-similarity-val">-</strong>
+                        </div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-metric">
+                            <span>Execution Latency:</span>
+                            <strong id="perf-latency-val">0 ms</strong>
+                        </div>
+                    </div>
+
+                    <!-- Output Console -->
+                    <div class="console-output">
+                        <div class="console-header">
+                            <span>CONSOLE OUTPUT</span>
+                            <span class="console-timestamp" id="console-time">--:--:--</span>
+                        </div>
+                        <pre id="console-content" class="console-text">Ready. Enter a query in the playground to begin simulation...</pre>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Lower Section: Redis Cache Inspector -->
+        <section class="card glass-card bottom-card">
+            <div class="card-header">
+                <div class="header-left">
+                    <h2>💾 Live Redis Cache Inspector</h2>
+                    <span class="badge font-mono" id="keys-count">0 Keys</span>
+                </div>
+                <div class="header-right">
+                    <div class="invalidation-form">
+                        <input type="text" id="invalidate-context-input" placeholder="context_hash" />
+                        <button class="btn btn-danger" id="btn-invalidate-context">Invalidate Context</button>
+                    </div>
+                    <button class="btn btn-secondary" id="btn-refresh-keys">Refresh Keys</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="keys-table">
+                    <thead>
+                        <tr>
+                            <th>Key ID</th>
+                            <th>Cached Query</th>
+                            <th>Context Hash</th>
+                            <th>Created Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keys-table-body">
+                        <tr>
+                            <td colspan="5" class="empty-state">No keys found in Redis cache. Try running a query simulation above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>
