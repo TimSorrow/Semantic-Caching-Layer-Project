@@ -1,123 +1,123 @@
-# Semantic Caching Layer (Local & Private RAG Cache)
+# Semantic Caching Layer (GCP Hybrid & Local Stack)
 
-This project is a fully local, free, and private MVP for a **Semantic Caching Layer** designed for systems like **NotebookLM** or any custom Retrieval-Augmented Generation (RAG) pipelines. The entire stack runs on your local machine and requires zero cloud API keys.
+A high-performance, context-aware **Semantic Caching Layer** designed for RAG pipelines (such as NotebookLM). It supports **dual-mode deployment**: fully local (FastAPI, Redis VSS, Ollama) and Google Cloud serverless (Cloud Run, Compute Engine, Vertex AI Gemini & Embeddings).
+
+It features a premium, responsive **Glassmorphic Developer Dashboard** styled to match custom portfolio designs.
 
 ---
 
 ## 🚀 Architectural Features
 
-1. **Semantic Similarity Search:** Unlike traditional key-value caches that require exact string matches, this project evaluates the vector embeddings of queries. Rephrased queries with identical semantic intent are served instantly from the cache.
-2. **Local Model Stack (Ollama):**
-   * **Gemma 4** (`gemma4:latest`) — Used as the local fallback LLM to generate responses on cache misses.
-   * **Nomic Embed Text** (`nomic-embed-text`) — Generates 768-dimensional float vectors for input queries.
-3. **Context-Aware Pre-Filtering (Redis-Native Hybrid Search):**
-   * Cache entries are isolated by a document context state hash (`context_hash`). This prevents outdated responses when the source documents change.
-   * Filtering is processed natively inside the Redis vector search engine using **hybrid pre-filtering**:
-     `@context_hash:{context_hash} => [KNN 1 @embedding $vector AS similarity_score]`
-     This guarantees that Redis searches for similar queries *only* within the correct document context, preventing false cache misses from identical queries in other contexts.
+1. **Semantic Similarity Search:** Evaluates vector embeddings of incoming queries. Semantically identical or rephrased queries are served instantly from the database.
+2. **Context-Aware Pre-Filtering (Redis-Native Hybrid Search):**
+   Prevents cross-context contamination by restricting vector lookup to specific document boundaries:
+   `@context_hash:{context_hash} => [KNN 1 @embedding $vector AS similarity_score]`
+3. **Dual AI Engines (Ollama / GCP Vertex AI):**
+   - **Local Mode:** Uses Ollama with `llama3.2:latest` (2.0 GB LLM) and `nomic-embed-text` (embeddings).
+   - **Cloud Mode:** Serverless integration using Google Vertex AI's `gemini-1.5-flash` and `text-embedding-004` (embeddings) for zero idle VM costs.
 
 ---
 
-## 🛠 Technology Stack
+## ⚡ Premium Developer Dashboard
 
-* **FastAPI** — High-performance asynchronous API framework.
-* **Redis (Redis Stack)** — Database for vector storage and HNSW index similarity search.
-* **Ollama API** — Local inference manager for LLMs and embedding models.
-* **HTTPX** — Asynchronous HTTP client to communicate with Ollama.
-* **Pytest** — Automated testing suite with mock integrations.
+The project includes an embedded glassmorphic developer console to monitor and test cache performance in real-time.
+
+- **Query Simulator:** A playground to run prompt inputs and similarity thresholds.
+- **Pipeline Flow Visualizer:** An animating flow diagram that traces execution paths in real-time with neon connection paths (Green for cache Hits, Purple for Misses).
+- **Real-Time Metrics:** Sessions stats including total queries, hit rate, and cumulative latency saved.
+- **Live Redis Cache Inspector:** An interactive database inspector to view keys, verify context hashes, delete individual items, or invalidate entire context tags.
+
+*Access the dashboard at `http://127.0.0.1:8000/` after starting the server.*
 
 ---
 
-## 📦 Quick Start & Setup
+## 📦 Local Setup & Installation
 
 ### 1. Configure Ollama Models
 Ensure you have [Ollama](https://ollama.com) installed and running. Pull the required models:
 ```bash
-ollama pull gemma4
+ollama pull llama3.2
 ollama pull nomic-embed-text
 ```
 
 ### 2. Start Redis Stack
-Vector search requires Redis with the RediSearch module (included in Redis Stack). Run it via Docker:
+Vector search requires Redis with the RediSearch module. Run it via Docker:
 ```bash
 docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
 ```
-*The Redis Insight administration panel will be accessible at http://localhost:8001.*
 
-### 3. Install Python Dependencies
-Create a virtual environment and install the required packages:
+### 3. Install Dependencies
 ```bash
-# Create venv
 python -m venv venv
-
-# Activate venv (Windows)
+# Windows
 .\venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
 
-# Install dependencies
 pip install -r requirements.txt
 ```
 
 ### 4. Setup Environment Variables
-Create a `.env` file in the root of the project (or copy `.env.example`):
+Create a `.env` file in the root of the project:
 ```env
 OLLAMA_URL=http://localhost:11434
 EMBEDDING_MODEL=nomic-embed-text
-LLM_MODEL=gemma4:latest
+LLM_MODEL=llama3.2:latest
 SIMILARITY_THRESHOLD=0.90
 CACHE_TTL=3600
 VECTOR_DIMENSION=768
 REDIS_URL=redis://localhost:6379
+
+# GCP Vertex AI settings (optional, defaults to false)
+USE_VERTEX_AI=false
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_REGION=us-central1
 ```
 
-### 5. Run the FastAPI Server
-Start the development server with auto-reload:
+### 5. Run the Server
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
 ---
 
-## 🧪 Interactive Testing (Swagger UI)
+## ☁️ Google Cloud Platform (GCP) Deployment
 
-Open your browser and navigate to: **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**.
+This architecture is optimized to run serverless in GCP, costing virtually **$0/month** by utilising GCP's Free Tier and Vertex AI's pay-as-you-go pricing.
 
-### Semantic Caching Test Scenario:
-
-1. **Request 1 (Cache MISS):**
-   Send a `POST` request to `/api/v1/query` with the following body:
-   ```json
-   {
-     "query": "What is semantic caching?",
-     "context_hash": "my_notes_v1"
-   }
+### 1. Host Redis on a Free Compute Engine Instance
+1. Spin up an `e2-micro` VM (always free tier under US regions `us-central1`, `us-east1`) running Ubuntu.
+2. Install Docker on the VM and launch Redis Stack with a secure password:
+   ```bash
+   docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 -e REDIS_ARGS="--requirepass YOUR_SECURE_PASSWORD" redis/redis-stack:latest
    ```
-   *Response will take ~30-60s as Ollama generates the text using Gemma 4. The response status will be `"status": "MISS"`.*
 
-2. **Request 2 (Cache HIT — Semantically Similar Query):**
-   Send a rephrased query within the same context:
-   ```json
-   {
-     "query": "Can you explain semantic caching?",
-     "context_hash": "my_notes_v1"
-   }
+### 2. Build and Deploy FastAPI to Cloud Run
+1. Authenticate with Google Cloud CLI and set your project:
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
    ```
-   *Response will take ~20-50 milliseconds. The response status will be `"status": "HIT"` along with the similarity score (e.g., `"similarity": 0.97`).*
-
-3. **Request 3 (Context Update — Cache MISS):**
-   Send the same query but with an updated context version:
-   ```json
-   {
-     "query": "Can you explain semantic caching?",
-     "context_hash": "my_notes_v2"
-   }
+2. Enable the Vertex AI and Artifact Registry APIs:
+   ```bash
+   gcloud services enable aiplatform.googleapis.com artifactregistry.googleapis.com
    ```
-   *The system detects that the context hash has updated, triggers a `"status": "MISS"`, and generates a fresh response.*
+3. Submit the Docker build:
+   ```bash
+   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/semantic-cache-api
+   ```
+4. Deploy the container to Cloud Run (fully managed serverless):
+   ```bash
+   gcloud run deploy semantic-cache-api \
+     --image gcr.io/YOUR_PROJECT_ID/semantic-cache-api \
+     --platform managed \
+     --allow-unauthenticated \
+     --set-env-vars="REDIS_URL=redis://:YOUR_SECURE_PASSWORD@VM_EXTERNAL_IP:6379,USE_VERTEX_AI=true,GCP_PROJECT_ID=YOUR_PROJECT_ID,GCP_REGION=us-central1"
+   ```
 
 ---
 
 ## 🧪 Running Automated Tests
-
-To run the unit and integration tests (isolated with mocks):
 ```bash
 python -m pytest
 ```

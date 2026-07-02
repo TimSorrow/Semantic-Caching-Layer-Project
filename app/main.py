@@ -51,10 +51,38 @@ app = FastAPI(
 # Make sure we mount it AFTER defining routes or handle fallback correctly.
 # But we can also mount it at /static and serve / directly with FileResponse.
 
+import asyncio
+
+# Global flag to track Vertex AI initialization status
+_vertex_initialized = False
+
+def _generate_vertex_gemini_sync(prompt: str) -> str:
+    global _vertex_initialized
+    import vertexai
+    from vertexai.generative_models import GenerativeModel
+    
+    if not _vertex_initialized:
+        vertexai.init(project=settings.GCP_PROJECT_ID, location=settings.GCP_REGION)
+        _vertex_initialized = True
+        
+    model = GenerativeModel(settings.VERTEX_LLM_MODEL)
+    response = model.generate_content(prompt)
+    return response.text
+
 async def generate_llm_response(prompt: str) -> str:
     """
-    Sends a chat generation query to the local Ollama instance using the configured model.
+    Sends a chat generation query to the configured model.
+    Uses Google Vertex AI (Gemini 1.5 Flash) if settings.USE_VERTEX_AI is True,
+    otherwise queries the local Ollama instance (Llama 3.2).
     """
+    if settings.USE_VERTEX_AI:
+        try:
+            return await asyncio.to_thread(_generate_vertex_gemini_sync, prompt)
+        except Exception as e:
+            logger.error(f"Vertex AI Gemini chat generation failed: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to generate text from Vertex AI Gemini: [{type(e).__name__}] {str(e)}")
+
+    # Fallback to local Ollama
     url = f"{settings.OLLAMA_URL}/api/chat"
     payload = {
         "model": settings.LLM_MODEL,

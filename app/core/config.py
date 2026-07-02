@@ -7,6 +7,13 @@ class Settings(BaseSettings):
     SIMILARITY_THRESHOLD: float = 0.90
     CACHE_TTL: int = 3600
     VECTOR_DIMENSION: int = 768
+    
+    # GCP Vertex AI Configurations
+    USE_VERTEX_AI: bool = False
+    GCP_PROJECT_ID: str = ""
+    GCP_REGION: str = "us-central1"
+    VERTEX_EMBEDDING_MODEL: str = "text-embedding-004"
+    VERTEX_LLM_MODEL: str = "gemini-1.5-flash"
     REDIS_URL: str = "redis://localhost:6379"
 
     class Config:

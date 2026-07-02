@@ -414,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (keys.length === 0) {
                 keysTableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="empty-state">No keys found in Redis cache. Try running a query simulation above.</td>
+                        <td colspan="4" class="empty-state">No keys found in Redis cache. Try running a query simulation above.</td>
                     </tr>`;
                 return;
             }
@@ -422,13 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
             keysTableBody.innerHTML = "";
             keys.forEach((item) => {
                 const row = document.createElement("tr");
-
-                // Parse created_at human readable date
-                let dateStr = "N/A";
-                if (item.created_at) {
-                    const date = new Date(parseFloat(item.created_at) * 1000);
-                    dateStr = date.toLocaleTimeString() + " " + date.toLocaleDateString();
-                }
 
                 const queryStr = item.query ? escapeHtml(item.query) : "N/A";
                 const contextStr = item.context_hash ? escapeHtml(item.context_hash) : "N/A";
@@ -438,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td class="font-mono" title="${item.key}">${shortKey}</td>
                     <td>${queryStr}</td>
                     <td><span class="badge font-mono">${contextStr}</span></td>
-                    <td class="text-secondary">${dateStr}</td>
                     <td>
                         <button class="btn-delete-row" data-key="${item.key}">Delete</button>
                     </td>
@@ -472,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error refreshing Redis keys:", err);
             keysTableBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="empty-state" style="color: var(--accent-red)">Error reading keys from Redis. Check database connection.</td>
+                    <td colspan="4" class="empty-state" style="color: var(--accent-red)">Error reading keys from Redis. Check database connection.</td>
                 </tr>`;
         }
     }
