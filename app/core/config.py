@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     USE_VERTEX_AI: bool = False
     GCP_PROJECT_ID: str = ""
     GCP_REGION: str = "us-central1"
-    VERTEX_EMBEDDING_MODEL: str = "text-embedding-004"
+    VERTEX_EMBEDDING_MODEL: str = "text-multilingual-embedding-002"
     VERTEX_LLM_MODEL: str = "gemini-2.5-flash"
     REDIS_URL: str = "redis://localhost:6379"
 
