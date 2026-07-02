@@ -41,57 +41,59 @@
                 <h2>Pipeline Flow Visualizer</h2>
                 <span class="section-label" id="flow-status">IDLE</span>
             </div>
-            <div class="pipeline-visualizer">
-                <!-- SVG Layer for drawing clean lines between node centers -->
-                <svg id="pipeline-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible;"></svg>
+            <div class="pipeline-container">
+                <div class="pipeline-visualizer">
+                    <!-- SVG Layer for drawing clean lines between node centers -->
+                    <svg id="pipeline-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible;"></svg>
 
-                <div class="pipeline-node active" id="node-input">
-                    <div class="node-icon">📥</div>
-                    <span>Input</span>
-                </div>
+                    <div class="pipeline-node active" id="node-input">
+                        <div class="node-icon">📥</div>
+                        <span>Input</span>
+                    </div>
 
-                <div class="pipeline-node" id="node-embed">
-                    <div class="node-icon">🧠</div>
-                    <span>Embedding</span>
-                    <small class="node-meta">nomic-embed-text</small>
-                </div>
+                    <div class="pipeline-node" id="node-embed">
+                        <div class="node-icon">🧠</div>
+                        <span>Embedding</span>
+                        <small class="node-meta">nomic-embed-text</small>
+                    </div>
 
-                <div class="pipeline-node" id="node-cache">
-                    <div class="node-icon">🔍</div>
-                    <span>Redis VSS</span>
-                    <small class="node-meta">HNSW Index</small>
-                </div>
-                
-                <div class="pipeline-split-container">
-                    <!-- HIT path -->
-                    <div class="split-path hit-path">
-                        <div class="pipeline-node success-glow" id="node-hit">
-                            <div class="node-icon">✅</div>
-                            <span>Cache HIT</span>
-                            <small class="node-meta" id="hit-similarity-text">-</small>
+                    <div class="pipeline-node" id="node-cache">
+                        <div class="node-icon">🔍</div>
+                        <span>Redis VSS</span>
+                        <small class="node-meta">HNSW Index</small>
+                    </div>
+                    
+                    <div class="pipeline-split-container">
+                        <!-- HIT path -->
+                        <div class="split-path hit-path">
+                            <div class="pipeline-node success-glow" id="node-hit">
+                                <div class="node-icon">✅</div>
+                                <span>Cache HIT</span>
+                                <small class="node-meta" id="hit-similarity-text">-</small>
+                            </div>
+                        </div>
+                        <!-- MISS path -->
+                        <div class="split-path miss-path">
+                            <div class="pipeline-node error-glow" id="node-miss">
+                                <div class="node-icon">❌</div>
+                                <span>Cache MISS</span>
+                            </div>
+                            <div class="pipeline-node" id="node-llm">
+                                <div class="node-icon">🤖</div>
+                                <span>Llama 3.2</span>
+                                <small class="node-meta">Thinking...</small>
+                            </div>
+                            <div class="pipeline-node" id="node-store">
+                                <div class="node-icon">💾</div>
+                                <span>Save Cache</span>
+                            </div>
                         </div>
                     </div>
-                    <!-- MISS path -->
-                    <div class="split-path miss-path">
-                        <div class="pipeline-node error-glow" id="node-miss">
-                            <div class="node-icon">❌</div>
-                            <span>Cache MISS</span>
-                        </div>
-                        <div class="pipeline-node" id="node-llm">
-                            <div class="node-icon">🤖</div>
-                            <span>Llama 3.2</span>
-                            <small class="node-meta">Thinking...</small>
-                        </div>
-                        <div class="pipeline-node" id="node-store">
-                            <div class="node-icon">💾</div>
-                            <span>Save Cache</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="pipeline-node" id="node-output">
-                    <div class="node-icon">📤</div>
-                    <span>Output</span>
+                    <div class="pipeline-node" id="node-output">
+                        <div class="node-icon">📤</div>
+                        <span>Output</span>
+                    </div>
                 </div>
             </div>
 
