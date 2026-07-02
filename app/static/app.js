@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch("/api/v1/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: query, context_hash: context })
+                body: JSON.stringify({ query: query, context_hash: context, threshold: threshold })
             });
 
             const latency = Date.now() - startTime;

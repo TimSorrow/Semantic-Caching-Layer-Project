@@ -4,6 +4,7 @@ from typing import Optional
 class QueryRequest(BaseModel):
     query: str = Field(..., description="The query to search/generate response for.")
     context_hash: Optional[str] = Field(None, description="The context hash of the source documents to validate cache consistency.")
+    threshold: Optional[float] = Field(None, description="Dynamic similarity threshold to override system default.")
 
 class QueryResponse(BaseModel):
     response: str = Field(..., description="The generated or cached response.")

@@ -170,8 +170,9 @@ async def query_endpoint(payload: QueryRequest, request: Request):
                 detail=f"Both embedding generation and LLM generation failed: {llm_err}"
             )
 
-    # Step-2: Search Cache
-    cache_hit = await search_cache(vector, settings.SIMILARITY_THRESHOLD, context_hash)
+    # Step-2: Search Cache (use custom threshold if passed, fallback to settings default)
+    threshold = payload.threshold if payload.threshold is not None else settings.SIMILARITY_THRESHOLD
+    cache_hit = await search_cache(vector, threshold, context_hash)
 
     if cache_hit:
         cached_context_hash = cache_hit.get("context_hash")

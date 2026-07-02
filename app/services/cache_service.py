@@ -155,6 +155,8 @@ async def search_cache(vector: list[float], threshold: float, context_hash: str 
         distance = float(best_doc.get("similarity_score", 1.0))
         similarity = 1.0 - distance
         
+        logger.info(f"Vector search closest match similarity: {similarity:.4f} (required threshold: {threshold:.4f})")
+        
         if similarity >= threshold:
             best_doc["similarity"] = similarity
             return best_doc
