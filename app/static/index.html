@@ -117,7 +117,7 @@
         <!-- Balanced 2-Column Grid Layout (Bottom Level) -->
         <main class="dashboard-grid">
             
-            <!-- Left Column: Controls & Metrics -->
+            <!-- Left Column: Controls & Console Logs -->
             <div class="column-left">
                 <!-- Simulator Card -->
                 <section class="card glass-card">
@@ -149,6 +149,18 @@
                     </form>
                 </section>
 
+                <!-- Console Logs Console -->
+                <div class="console-output">
+                    <div class="console-header">
+                        <span>CONSOLE OUTPUT</span>
+                        <span class="console-timestamp" id="console-time">--:--:--</span>
+                    </div>
+                    <pre id="console-content" class="console-text">Ready. Enter a query in the playground to begin simulation...</pre>
+                </div>
+            </div>
+
+            <!-- Right Column: Metrics & Database Inspector -->
+            <div class="column-right">
                 <!-- Metrics Card -->
                 <section class="card glass-card">
                     <div class="card-header">
@@ -183,10 +195,7 @@
                         </div>
                     </div>
                 </section>
-            </div>
 
-            <!-- Right Column: Database Inspector & System Logs -->
-            <div class="column-right">
                 <!-- Live Redis Table Management -->
                 <section class="card glass-card" style="height: auto;">
                     <div class="card-header">
@@ -220,15 +229,6 @@
                         </table>
                     </div>
                 </section>
-
-                <!-- Console Logs Console -->
-                <div class="console-output">
-                    <div class="console-header">
-                        <span>CONSOLE OUTPUT</span>
-                        <span class="console-timestamp" id="console-time">--:--:--</span>
-                    </div>
-                    <pre id="console-content" class="console-text">Ready. Enter a query in the playground to begin simulation...</pre>
-                </div>
             </div>
         </main>
     </div>
