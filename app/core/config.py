@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     GCP_PROJECT_ID: str = ""
     GCP_REGION: str = "us-central1"
     VERTEX_EMBEDDING_MODEL: str = "text-embedding-004"
-    VERTEX_LLM_MODEL: str = "gemini-1.5-flash"
+    VERTEX_LLM_MODEL: str = "gemini-flash-latest"
     REDIS_URL: str = "redis://localhost:6379"
 
     class Config:

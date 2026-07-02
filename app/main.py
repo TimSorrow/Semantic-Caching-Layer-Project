@@ -2,7 +2,7 @@ import os
 import logging
 import httpx
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -105,15 +105,45 @@ async def generate_llm_response(prompt: str) -> str:
         logger.error(f"Ollama chat generation failed: {e}", exc_info=True)
         raise RuntimeError(f"Failed to generate text from Ollama LLM: [{type(e).__name__}] {str(e)}")
 
+async def check_rate_limit(request: Request) -> None:
+    """
+    Simple IP-based rate limiter using Redis to protect Vertex AI / Ollama APIs.
+    Limits clients to 15 requests per minute.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    limit = 15
+    window = 60
+    
+    try:
+        redis_client = get_redis_client()
+        if redis_client:
+            key = f"rate_limit:{client_ip}"
+            current = await redis_client.incr(key)
+            if current == 1:
+                await redis_client.expire(key, window)
+            if current > limit:
+                logger.warning(f"Rate limit exceeded for IP: {client_ip} (Requests: {current})")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many requests from this IP. Please try again in a minute."
+                )
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Gracefully degrade: if Redis fails, do not block the pipeline
+        logger.error(f"Rate limiter failed: {e}")
+        pass
+
 @app.post("/api/v1/query", response_model=QueryResponse)
-async def query_endpoint(payload: QueryRequest):
+async def query_endpoint(payload: QueryRequest, request: Request):
     """
     Query endpoint that implements the semantic caching flow:
-    1. Generate embedding vector for the query via local Ollama.
-    2. Search the Redis vector cache.
-    3. If HIT and context_hash matches (if provided):
+    1. Apply IP-based rate limiting.
+    2. Generate embedding vector for the query via local Ollama.
+    3. Search the Redis vector cache.
+    4. If HIT and context_hash matches (if provided):
        - Return the cached response with metadata status="HIT".
-    4. If MISS (or context_hash mismatch):
+    5. If MISS (or context_hash mismatch):
        - Query local LLM (Gemma 4) using Ollama.
        - Store the query, response, vector, and context_hash in the cache.
        - Return the response with metadata status="MISS".
