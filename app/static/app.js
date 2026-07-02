@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 animateConnector("connector-miss-2", true);
                 await sleep(400);
                 animateNode("node-llm", true);
-                logToConsole(`⚠️ Cache MISS.\nPrompting local fallback LLM (Llama 3.2). This runs local token generation...`);
+                logToConsole(`⚠️ Cache MISS.\nPrompting Google Gemini LLM...`);
                 
                 // Keep highlighting LLM while we simulate response wait
                 await sleep(600);
@@ -229,13 +229,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 animateNode("node-store", true);
                 animateConnector("connector-miss-4", true);
                 await sleep(400);
-
-                logToConsole(`🤖 Llama 3.2 generated response.\nSaving response vector to Redis HNSW index...\nLatency: ${latency} ms\nLLM Response: "${data.response.substring(0, 150)}..."`);
+ 
+                logToConsole(`🤖 Gemini 2.5 Flash generated response.\nSaving response vector to Redis HNSW index...\nClosest match similarity: ${data.similarity ? data.similarity.toFixed(4) : "None"}\nLatency: ${latency} ms\nLLM Response: "${data.response.substring(0, 150)}..."`);
                 
                 // Show Performance Alert
                 perfStatusBadge.textContent = "MISS";
                 perfStatusBadge.className = "badge";
-                perfSimilarityVal.textContent = "-";
+                perfSimilarityVal.textContent = data.similarity ? data.similarity.toFixed(4) : "-";
                 perfLatencyVal.textContent = `${latency} ms`;
                 performanceBanner.className = "performance-panel miss-alert";
             }

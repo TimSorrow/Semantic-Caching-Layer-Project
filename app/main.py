@@ -172,8 +172,8 @@ async def query_endpoint(payload: QueryRequest, request: Request):
 
     # Step-2: Search Cache (use custom threshold if passed, fallback to settings default)
     threshold = payload.threshold if payload.threshold is not None else settings.SIMILARITY_THRESHOLD
-    cache_hit = await search_cache(vector, threshold, context_hash)
-
+    cache_hit, closest_similarity = await search_cache(vector, threshold, context_hash)
+    
     if cache_hit:
         cached_context_hash = cache_hit.get("context_hash")
         
@@ -183,7 +183,7 @@ async def query_endpoint(payload: QueryRequest, request: Request):
             return QueryResponse(
                 response=cache_hit["response"],
                 status="HIT",
-                similarity=float(cache_hit["similarity"])
+                similarity=closest_similarity
             )
         else:
             logger.info("Semantic cache hit, but context_hash mismatched. Treating as MISS.")
@@ -205,7 +205,7 @@ async def query_endpoint(payload: QueryRequest, request: Request):
     return QueryResponse(
         response=response_text,
         status="MISS",
-        similarity=None
+        similarity=closest_similarity
     )
 
 @app.post("/api/v1/invalidate", response_model=InvalidateResponse)

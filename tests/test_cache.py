@@ -46,13 +46,13 @@ def test_health(mock_get_redis):
     assert response.json() == {"status": "ok", "redis": "online"}
 
 def test_query_cache_hit(mock_get_embedding, mock_search_cache, mock_generate_llm_response):
-    # Set up cache hit response
-    mock_search_cache.return_value = {
+    # Set up cache hit response (tuple: best_doc, similarity)
+    mock_search_cache.return_value = ({
         "query": "test query",
         "response": "Cached response here",
         "similarity": 0.95,
         "context_hash": "test_hash"
-    }
+    }, 0.95)
 
     response = client.post(
         "/api/v1/query",
@@ -68,8 +68,8 @@ def test_query_cache_hit(mock_get_embedding, mock_search_cache, mock_generate_ll
     mock_generate_llm_response.assert_not_called()
 
 def test_query_cache_miss(mock_get_embedding, mock_search_cache, mock_generate_llm_response, mock_store_cache):
-    # Set up cache miss response
-    mock_search_cache.return_value = None
+    # Set up cache miss response (tuple: None, None)
+    mock_search_cache.return_value = (None, None)
 
     response = client.post(
         "/api/v1/query",
@@ -89,12 +89,12 @@ def test_query_cache_miss(mock_get_embedding, mock_search_cache, mock_generate_l
 
 def test_query_cache_context_hash_mismatch(mock_get_embedding, mock_search_cache, mock_generate_llm_response, mock_store_cache):
     # Set up cache hit response with a different context_hash
-    mock_search_cache.return_value = {
+    mock_search_cache.return_value = ({
         "query": "test query",
         "response": "Old cached response",
         "similarity": 0.95,
         "context_hash": "old_hash"
-    }
+    }, 0.95)
 
     response = client.post(
         "/api/v1/query",
@@ -106,6 +106,7 @@ def test_query_cache_context_hash_mismatch(mock_get_embedding, mock_search_cache
     # Mismatch leads to a Cache Miss, meaning it queries the LLM and gets the fresh response
     assert data["response"] == "Mocked Ollama LLM Response"
     assert data["status"] == "MISS"
+    assert data["similarity"] == 0.95
     
     # Verify LLM was called and stored
     mock_generate_llm_response.assert_called_once()

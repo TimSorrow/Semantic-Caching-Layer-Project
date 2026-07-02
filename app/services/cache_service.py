@@ -116,12 +116,13 @@ def parse_search_results(res) -> list[dict]:
                     parsed_docs.append(parsed_fields)
     return parsed_docs
 
-async def search_cache(vector: list[float], threshold: float, context_hash: str = None) -> dict | None:
+async def search_cache(vector: list[float], threshold: float, context_hash: str = None) -> tuple[dict | None, float | None]:
     """
     Performs a vector search (KNN) via FT.SEARCH using the 768-dimensional vector.
     Applies pre-filtering by context_hash if provided, otherwise searches globally.
-    Calculates cosine similarity and returns the cached response if the score >= threshold.
-    Returns None if no matching entry is found.
+    Calculates cosine similarity and returns a tuple (best_doc, similarity) where:
+    - best_doc is the matching cache entry if similarity >= threshold, else None.
+    - similarity is the cosine similarity score of the closest match, or None if no entries exist.
     """
     client = get_redis_client()
     try:
@@ -146,7 +147,7 @@ async def search_cache(vector: list[float], threshold: float, context_hash: str 
         parsed_docs = parse_search_results(res)
         
         if not parsed_docs:
-            return None
+            return None, None
             
         best_doc = parsed_docs[0]
         
@@ -159,12 +160,12 @@ async def search_cache(vector: list[float], threshold: float, context_hash: str 
         
         if similarity >= threshold:
             best_doc["similarity"] = similarity
-            return best_doc
+            return best_doc, similarity
             
-        return None
+        return None, similarity
     except Exception as e:
         logger.error(f"Redis cache search failed (gracefully degrading): {e}", exc_info=True)
-        return None
+        return None, None
 
 async def store_cache(query: str, response: str, vector: list[float], context_hash: str = None) -> None:
     """
