@@ -2,6 +2,8 @@
 
 A high-performance, context-aware **Semantic Caching Layer** designed for RAG pipelines (such as NotebookLM). It supports **dual-mode deployment**: fully local (FastAPI, Redis VSS, Ollama) and Google Cloud serverless (Cloud Run, Compute Engine, Vertex AI Gemini & Embeddings).
 
+> **Note on the MVP Branch:** This repository contains an experimental `standalone-mvp/` directory which includes a barebones, two-tier semantic cache built with FastAPI, RedisVL, and SentenceTransformers. This serves as a minimal entry point to understand the caching mechanics before diving into the full architecture.
+
 It features a premium, responsive **Glassmorphic Developer Dashboard** styled to match custom portfolio designs.
 
 ---
